@@ -45,6 +45,7 @@ jobs:
           import time
           import random
           import os
+          from datetime import datetime
           from selenium import webdriver
           from selenium.webdriver.chrome.options import Options
           from selenium.webdriver.chrome.service import Service
@@ -59,6 +60,7 @@ jobs:
           USER = "admin"
           PASS = "Aa@198971"
           HISTORY_FILE = "last_priority.txt"
+          LOG_FILE = "router_update_log.txt"
 
           def get_last_priority():
               if os.path.exists(HISTORY_FILE):
@@ -72,6 +74,11 @@ jobs:
           def save_last_priority(val):
               with open(HISTORY_FILE, "w") as f:
                   f.write(str(val))
+
+          def write_to_log(val):
+              timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+              with open(LOG_FILE, "a", encoding="utf-8") as f:
+                  f.write(f"[{timestamp}] - تم تغيير VlanPriority بنجاح إلى القيمة: {val}\n")
 
           def advanced_wan_update(target_priority):
               chrome_options = Options()
@@ -223,8 +230,9 @@ jobs:
               # تنفيذ الدالة
               advanced_wan_update(new_priority)
               
-              # حفظ القيمة الجديدة في الملف
+              # حفظ القيمة الجديدة في الملفات
               save_last_priority(new_priority)
+              write_to_log(new_priority)
 
               # الانتظار لمدة 5 دقائق (300 ثانية)
               print("\n⏳ جاري الانتظار 5 دقائق (300 ثانية) قبل التحديث التالي...")
@@ -237,8 +245,8 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add last_priority.txt || true
-          git commit -m "📝 Update router VlanPriority history" || true
+          git add last_priority.txt router_update_log.txt || true
+          git commit -m "📝 Update router VlanPriority and Logs" || true
           git push || true
 
       - name: ⏳ Workflow Persistence (Auto-restart)
